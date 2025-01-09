@@ -5,6 +5,8 @@ import "./App.css";
 function App() {
   const [inputAudioDevices, setInputAudioDevices] = createSignal<string[]>([]);
   const [outputAudioDevices, setOutputAudioDevices] = createSignal<string[]>([]);
+  const [selectedInputDevice, setSelectedInputDevice] = createSignal<string | null>(null);
+  const [selectedOutputDevice, setSelectedOutputDevice] = createSignal<string | null>(null);
 
   // 入力オーディオデバイスを取得する関数
   const fetchInputAudioDevices = async () => {
@@ -26,6 +28,28 @@ function App() {
     }
   };
 
+  // デバイス選択時の処理
+  const selectInputDevice = async (deviceName: string) => {
+    try {
+      await invoke("set_input_device", { inputDeviceName: deviceName }).then(()=>{
+        setSelectedInputDevice(deviceName); // 選択中のデバイスを更新
+        console.log(`Input device set to: ${deviceName}`);
+      });
+    } catch (error) {
+      console.error(`Failed to set input device (${deviceName}):`, error);
+    }
+  };
+  const selectOutputDevice = async (deviceName: string) => {
+    try {
+      await invoke("set_output_device", { outputDeviceName: deviceName }).then(()=>{
+        setSelectedOutputDevice(deviceName); // 選択中のデバイスを更新
+        console.log(`Output device set to: ${deviceName}`);
+      });
+    } catch (error) {
+      console.error(`Failed to set output device (${deviceName}):`, error);
+    }
+  };
+
   return (
     <main class="container">
       <h1>TauriAudio</h1>
@@ -33,7 +57,10 @@ function App() {
         <button onClick={fetchInputAudioDevices}>入力オーディオデバイス取得</button>
         <ul>
           {inputAudioDevices().length > 0 ? (
-            inputAudioDevices().map((device) => <li>{device}</li>)
+            inputAudioDevices().map((device) => (
+              <li onClick={()=>selectInputDevice(device)} style={{color: selectedInputDevice()===device?"#F00":"#000"}}>
+                {device}
+              </li>))
           ) : (
             <li>入力デバイスが見つかりませんでした</li>
           )}
@@ -43,7 +70,10 @@ function App() {
         <button onClick={fetchOutputAudioDevices}>出力オーディオデバイス取得</button>
         <ul>
           {outputAudioDevices().length > 0 ? (
-            outputAudioDevices().map((device) => <li>{device}</li>)
+            outputAudioDevices().map((device) => (
+              <li onClick={()=>selectOutputDevice(device)} style={{color: selectedOutputDevice()===device?"#F00":"#000"}}>
+                {device}
+              </li>))
           ) : (
             <li>出力デバイスが見つかりませんでした</li>
           )}
